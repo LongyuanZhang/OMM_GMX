@@ -14,6 +14,7 @@ from parmed import gromacs
 import time
 
 # Gromacs force field library
+
 gromacs.GROMACS_TOPDIR = "/home/lzhang657/anaconda3/envs/CLIPS2/share/gromacs/top"
 output =  open('ti.txt', 'w')
 
@@ -94,8 +95,8 @@ def setParameters(LJScaling, chargeScaling):
     for i in range(system.getNumParticles()):
         [epsilon, sigma, lambda0] = customnonbond.getParticleParameters(i)
         customnonbond.setParticleParameters(i, [epsilon, sigma, LJScaling])
+    customnonbond.updateParametersInContext(simulation.context)
 
-        
 setParameters(0.0, 0.0)
 simulation.context.setVelocitiesToTemperature(298.15*kelvin)
 simulation.reporters.append(app.DCDReporter('traj.dcd', 5000))
@@ -107,11 +108,11 @@ nequlibrium = 20000  #run short (10–100 ps) simulations to equlibrate at each 
 simulation.step(nequlibrium)
 nsteps =1000
 niterations = [125, 250]
-    
+
 x1,y1 = np.polynomial.legendre.leggauss(10)
 t1 = 0.5*(x1+1)*(1.0-0.0)+0.0
 w1 = y1*0.5*(1.0-0.0)
-        
+
 x2,y2 = np.polynomial.legendre.leggauss(10)
 t2 = 0.5*(x2+1)*(1.0-0.0)+0.0
 w2 = y2*0.5*(1.0-0.0)
@@ -122,6 +123,11 @@ chargeScalings = np.concatenate([np.zeros(10),t2])
 nstates = len(LJScalings) 
 derivatives = [0]*nstates
     
+chargeScalings = np.concatenate([np.zeros(10),t2]) 
+
+nstates = len(LJScalings)
+derivatives = [0]*nstates
+
 kT = AVOGADRO_CONSTANT_NA*BOLTZMANN_CONSTANT_kB*integrator.getTemperature()
 for k in range(nstates):
     print(k)
@@ -157,6 +163,8 @@ for i in range(10):
 elec = elec/niterations[1]
 output.write("LJ %f elec %f total %f\n" %(lj, elec, lj+elec))
 
+#output.write("%f\n" %lj+elec)
+            
 with open('nacl_out.pdb', 'w') as config:
     boxVec = simulation.context.getState(getPositions=True).getPeriodicBoxVectors()
     simulation.topology.setPeriodicBoxVectors(boxVec)
@@ -166,5 +174,3 @@ with open('nacl_out.pdb', 'w') as config:
 #output.write("LJ + elec %f\n" %lj+elec)
 output.write("time: %f s" %(time.time()-start_t))
 output.close()
-
-
