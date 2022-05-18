@@ -1,0 +1,52 @@
+;
+;	File 'topol.top' was generated
+;	By user: lzhang657 (20710)
+;	On host: starling.chem.wisc.edu
+;	At date: Tue Feb  1 15:31:45 2022
+;
+;	This is a standalone topology file
+;
+;	Created by:
+;	                    :-) GROMACS - gmx pdb2gmx, 2019.6 (-:
+;	
+;	Executable:   /home/lzhang657/anaconda3/envs/CLIPS2/bin/gmx
+;	Data prefix:  /home/lzhang657/anaconda3/envs/CLIPS2
+;	Working dir:  /home/lzhang657/Schmidt_work/Gromacs_tutorial/TI_TEST_LZ
+;	Command line:
+;	  gmx pdb2gmx -f water.box.gro
+;	Force field was read from the standard GROMACS share directory.
+;
+
+; Include forcefield parameters
+#include "oplsaa.ff/forcefield.itp"
+
+; Include water topology
+#include "oplsaa.ff/tip3p.itp"
+
+#ifdef POSRES_WATER
+; Position restraint for each water oxygen
+[ position_restraints ]
+;  i funct       fcx        fcy        fcz
+   1    1       1000       1000       1000
+#endif
+
+; Include topology for ions
+#include "oplsaa.ff/ions.itp"
+
+[ moleculetype ]
+; molname   nrexcl
+ghost         1
+
+[ atoms ]
+; id    at type     res nr  residu name at name  cg nr  charge   mass
+1       opls_407    1       NA          NA       1      1        22.98977
+2       opls_401    2       CL          CL       2      -1       35.45300
+
+[ system ]
+; Name
+216H2O,WATJP01,SPC216,SPC-MODEL,300K,BOX(M)=1.86206NM,WFVG,MAR. 1984
+
+[ molecules ]
+; Compound        #mols
+SOL         340
+ghost         1
