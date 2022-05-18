@@ -13,6 +13,7 @@ from parmed import gromacs
 
 import time
 
+# Gromacs force field library
 gromacs.GROMACS_TOPDIR = "/home/lzhang657/anaconda3/envs/CLIPS2/share/gromacs/top"
 output =  open('ti.txt', 'w')
 
