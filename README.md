@@ -17,7 +17,7 @@ The L-J parameters in the "CustomNonbondedForce" object are not the same as the 
 NB_cus.getEnergyFunction()  
 
 $$\begin{eqnarray} 
-V_LJ(r) \ &=& \epsilon_1 * \epsilon_2 * (sigr6^2 - sigr6)      \nonumber \\
+V_{LJ}(r) \ &=& \epsilon_1 * \epsilon_2 * (sigr6^2 - sigr6)      \nonumber \\
 sigr6 \ &=& sigr2^3 \nonumber \\
 sigr2 \ &=& (sigc/r)^2 \nonumber \\
 sigc \ &=& \sigma_1 * \sigma_2 \nonumber \\
