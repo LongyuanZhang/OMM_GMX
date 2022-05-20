@@ -16,10 +16,12 @@ The L-J parameters in the "CustomNonbondedForce" object are not the same as the 
 
 NB_cus.getEnergyFunction()  
 
-epsilon_1 * epsilon_2 * (sigr6^2 - sigr6);  
-sigr6 = sigr2 * sigr2 * sigr2;  
-sigr2 = (sigc/r)^2;  
-sigc= sigma_1 * sigma_2  
+$$\begin{eqnarray} 
+V_LJ(r) \ &=& \epsilon_1 * \epsilon_2 * (sigr6^2 - sigr6)      \nonumber \\
+sigr6 \ &=& sigr2^3 \nonumber \\
+sigr2 \ &=& (sigc/r)^2 \nonumber \\
+sigc \ &=& \sigma_1 * \sigma_2 \nonumber \\
+\end{eqnarray}$$
 
 ## soft-core potential in TI
 Based on the description of soft-core potential in Gromacs manual https://manual.gromacs.org/2019.1/reference-manual/functions/free-energy-interactions.html, the soft-core potential has been modified using the function form of the "CustomNonbondedForce" object that ParmEd generates.
