@@ -1,0 +1,59 @@
+;
+;	File 'topol.top' was generated
+;	By user: lzhang657 (20710)
+;	On host: starling.chem.wisc.edu
+;	At date: Sun May 29 12:51:35 2022
+;
+;	This is a standalone topology file
+;
+;	Created by:
+;	                    :-) GROMACS - gmx pdb2gmx, 2019.6 (-:
+;	
+;	Executable:   /home/lzhang657/anaconda3/envs/CLIPS2/bin/gmx
+;	Data prefix:  /home/lzhang657/anaconda3/envs/CLIPS2
+;	Working dir:  /home/lzhang657/Schmidt_work/OpenMM_tutorial/TI_NaCl_solv/OMM_GMX/OMM_GMX/OMM_Amber
+;	Command line:
+;	  gmx pdb2gmx -f solv_ions.gro -o solv_ions_top.gro
+;	Force field was read from the standard GROMACS share directory.
+;
+
+; Include forcefield parameters
+#include "amber99.ff/forcefield.itp"
+
+[ moleculetype ]
+; Name            nrexcl
+Ion                 3
+
+[ atoms ]
+;   nr       type  resnr residue  atom   cgnr     charge       mass  typeB    chargeB      massB
+; residue 341 NA  rtp NA   q +1.0
+     1         Na    341     NA     NA      1          1      22.99   ; qtot 1
+; residue 342 CL  rtp CL   q -1.0
+     2         Cl    342     CL     CL      2         -1      35.45   ; qtot 0
+
+; Include Position restraint file
+#ifdef POSRES
+#include "posre.itp"
+#endif
+
+; Include water topology
+#include "amber99.ff/tip3p.itp"
+
+#ifdef POSRES_WATER
+; Position restraint for each water oxygen
+[ position_restraints ]
+;  i funct       fcx        fcy        fcz
+   1    1       1000       1000       1000
+#endif
+
+; Include topology for ions
+#include "amber99.ff/ions.itp"
+
+[ system ]
+; Name
+216H2O,WATJP01,SPC216,SPC-MODEL,300K,BOX(M)=1.86206NM,WFVG,MAR. 1984
+
+[ molecules ]
+; Compound        #mols
+Ion                 1
+SOL               340
