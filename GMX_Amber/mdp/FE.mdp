@@ -1,0 +1,48 @@
+integrator               = sd
+tinit                    = 0
+dt                       = 0.002
+nsteps                   = 200000
+comm-mode                = Linear
+nstcomm                  = 1
+nstlog                   = 1000
+nstenergy                = 100
+nstlist                  = 1
+ns_type                  = grid
+pbc                      = xyz
+rlist                    = 1
+coulombtype              = PME       ; Treatment of long range electrostatic interactions
+pme_order                = 4         ; cubic interpolation
+fourierspacing           = 0.12
+rcoulomb                 = 1
+vdw-type                 = Cut-off
+rvdw                     = 1
+epsilon_surface          = 0
+DispCorr                 = EnerPres
+tc-grps                  = System
+tau_t                    = 1.0
+ref_t                    = 298.15
+Pcoupl                   = Parrinello-Rahman
+tau_p                    = 5.0
+compressibility          = 4.5e-5
+ref_p                    = 1.01325
+constraints              = hbonds
+constraint-algorithm     = lincs
+lincs-order              = 4
+
+free-energy               = yes
+sc-alpha                  = 0.5 
+sc-r-power                = 6 
+sc-power                  = 1  
+
+init-lambda-state        = XXX
+coul-lambdas             = 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.013 0.067 0.160 0.283 0.426 0.574 0.717 0.840 0.933 0.987
+vdw-lambdas              = 0.013 0.067 0.160 0.283 0.426 0.574 0.717 0.840 0.933 0.987 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000
+
+calc-lambda-neighbors = -1
+nstdhdl                  = 100 
+dhdl-print-energy        = yes
+couple-moltype           = ghost
+couple-lambda0           = none
+couple-lambda1           = vdw-q
+couple-intramol          = yes
+
