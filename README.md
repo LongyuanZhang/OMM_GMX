@@ -35,7 +35,7 @@ V_{LJ}(r) \ &=& \epsilon * (sigr6^2 - sigr6);      \nonumber \\
 sigr6 \ &=& sigr2^3; \nonumber \\
 sigr2 \ &=& (sigc/r)^2; \nonumber \\
 sigc \ &=& 0.5 * (\sigma_1 + \sigma_2) \nonumber \\
-\epsilon \ &=& \sqrt(\epsilon_1 * \epsilon_2) \nonumber \\
+\epsilon \ &=& \sqrt{\epsilon_1 * \epsilon_2} \nonumber \\
 \end{eqnarray}$$
 
 And the soft-core potential should also be modified accordingly.
