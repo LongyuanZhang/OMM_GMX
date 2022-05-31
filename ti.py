@@ -2,16 +2,14 @@ import numpy as np
 import csv
 import networkx as nx
 import random
-from openmm.app import *
-from openmm import *
+from openmm.app import * 
+from openmm import * 
 from openmm.unit import *
 from sys import stdout
 from sys import argv
 from math import sqrt
 import parmed
 from parmed import gromacs
-
-# Gromacs force field library
 import time 
 
 start_t = time.time()
@@ -36,31 +34,42 @@ for force in forces:
         #force.setUseLongRangeCorrection(True)
         CustomLJbyParmed = force
         break
+
 # alchemical particles' index
 index = 1020
 alchemical_particles = {index,index+1}
 
 chemical_particles = set(range(system.getNumParticles())) - alchemical_particles
 
-customnonbond = CustomNonbondedForce('lambda*epsilon*x*(x-1.0);'+
-                                     'x = sigma^6/(0.5*(1.0-lambda)*sigma^6 + r^6);'+
-                                     'sigma = sigma1*sigma2; epsilon = epsilon1*epsilon2; lambda = sqrt(lambda1*lambda2)')
-# set LJ Scaling to 0.0
-
-customnonbond.addPerParticleParameter('epsilon')
-customnonbond.addPerParticleParameter('sigma')
-customnonbond.addPerParticleParameter('lambda')
-
 try:
     CustomLJbyParmed
 except NameError:
+    # comb_rule = 2, CustomLJbyParmed object doesn't exist
+    customnonbond = CustomNonbondedForce('lambda*4*epsilon*x*(x-1.0);'+
+                                         'x = sigma^6/(0.5*(1.0-lambda)*sigma^6 + r^6);'+
+                                         'sigma = 0.5*(sigma1+sigma2); epsilon = sqrt(epsilon1*epsilon2); lambda = sqrt(lambda1*lambda2)')
+    # set LJ Scaling to 0.0
+
+    customnonbond.addPerParticleParameter('epsilon')
+    customnonbond.addPerParticleParameter('sigma')
+    customnonbond.addPerParticleParameter('lambda')
     for i in range(system.getNumParticles()):
         [charge, sigma, epsilon] = nonbondedforce.getParticleParameters(i)
         customnonbond.addParticle([epsilon, sigma, 0.0])
         if i in alchemical_particles:
             nonbondedforce.setParticleParameters(i, 0.0, sigma, 0.0)
+
 else:
-    # CustomLJbyParmed_exists = True
+    # comb_rule = 3, CustomLJbyParmed exists
+    customnonbond = CustomNonbondedForce('lambda*epsilon*x*(x-1.0);'+
+                                         'x = sigma^6/(0.5*(1.0-lambda)*sigma^6 + r^6);'+
+                                         'sigma = sigma1*sigma2; epsilon = epsilon1*epsilon2; lambda = sqrt(lambda1*lambda2)')
+    # set LJ Scaling to 0.0
+
+    customnonbond.addPerParticleParameter('epsilon')
+    customnonbond.addPerParticleParameter('sigma')
+    customnonbond.addPerParticleParameter('lambda')
+    
     for i in range(system.getNumParticles()):
         [epsilon, sigma] = CustomLJbyParmed.getParticleParameters(i)
         customnonbond.addParticle([epsilon, sigma, 0.0])
@@ -94,8 +103,8 @@ simulation = Simulation(parm.topology, system, integrator, platform)
 simulation.context.setPositions(positions)
 
 def setParameters(LJScaling, chargeScaling):
-    nonbondedforce.setParticleParameters(index,1.0*chargeScaling,0.2584,0.0)
-    nonbondedforce.setParticleParameters(index+1,-1.0*chargeScaling,0.4036,0.0)
+    nonbondedforce.setParticleParameters(index,1.0*chargeScaling,0.0,0.0)
+    nonbondedforce.setParticleParameters(index+1,-1.0*chargeScaling,0.0,0.0)
     #simulation.context.setParameter('lambda', LJScaling)
     nonbondedforce.updateParametersInContext(simulation.context)
     for i in range(system.getNumParticles()):
@@ -107,12 +116,11 @@ setParameters(0.0, 0.0)
 simulation.context.setVelocitiesToTemperature(298.15*kelvin)
 simulation.reporters.append(app.DCDReporter('traj.dcd', 5000))
 
-nequlibrium = 20000  #run short (10–100 ps) simulations to equlibrate at each lambda state
+nequlibrium = 40000  #run short (10–100 ps) simulations to equlibrate at each lambda state
 #nequlibrium = 10000  #run short (10–100 ps) simulations to equlibrate at each lambda state
 #print(parmed.openmm.energy_decomposition_system(parm, system,nrg=kilojoules_per_mole))
-
 simulation.step(nequlibrium)
-nsteps =100
+nsteps =10
 niterations = [125, 250]
 
 x1,y1 = np.polynomial.legendre.leggauss(10)
@@ -124,11 +132,6 @@ t2 = 0.5*(x2+1)*(1.0-0.0)+0.0
 w2 = y2*0.5*(1.0-0.0)
 
 LJScalings = np.concatenate([t1,np.ones(10)])
-chargeScalings = np.concatenate([np.zeros(10),t2])
-
-nstates = len(LJScalings) 
-derivatives = [0]*nstates
-    
 chargeScalings = np.concatenate([np.zeros(10),t2]) 
 
 nstates = len(LJScalings)
@@ -168,7 +171,6 @@ for i in range(10):
     elec += derivatives[i+10]*w2[i]
 elec = elec/niterations[1]
 output.write("LJ %f elec %f total %f\n" %(lj, elec, lj+elec))
-
 #output.write("%f\n" %lj+elec)
             
 with open('nacl_out.pdb', 'w') as config:
@@ -178,3 +180,4 @@ with open('nacl_out.pdb', 'w') as config:
 
 output.write("time: %f s" %(time.time()-start_t))
 output.close()
+
