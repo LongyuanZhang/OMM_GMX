@@ -11,10 +11,10 @@ from math import sqrt
 import parmed
 from parmed import gromacs
 
-import time
-
 # Gromacs force field library
+import time 
 
+start_t = time.time()
 gromacs.GROMACS_TOPDIR = "/home/lzhang657/anaconda3/envs/CLIPS2/share/gromacs/top"
 output =  open('ti.txt', 'w')
 
@@ -36,9 +36,10 @@ for force in forces:
         #force.setUseLongRangeCorrection(True)
         CustomLJbyParmed = force
         break
-
+# alchemical particles' index
 index = 1020
 alchemical_particles = {index,index+1}
+
 chemical_particles = set(range(system.getNumParticles())) - alchemical_particles
 
 customnonbond = CustomNonbondedForce('lambda*epsilon*x*(x-1.0);'+
@@ -49,18 +50,23 @@ customnonbond = CustomNonbondedForce('lambda*epsilon*x*(x-1.0);'+
 customnonbond.addPerParticleParameter('epsilon')
 customnonbond.addPerParticleParameter('sigma')
 customnonbond.addPerParticleParameter('lambda')
-#for i in range(system.getNumParticles()):
-#    [charge, sigma, epsilon] = nonbondedforce.getParticleParameters(i)
-#    customnonbond.addParticle([sigma, epsilon])
-#    if i in alchemical_particles:
-#        nonbondedforce.setParticleParameters(i, 0.0, sigma, 0.0)
 
-for i in range(system.getNumParticles()):
-    [epsilon, sigma] = CustomLJbyParmed.getParticleParameters(i)
-    customnonbond.addParticle([epsilon, sigma, 0.0])
-    if i in alchemical_particles:
-        CustomLJbyParmed.setParticleParameters(i, (0.0, sigma))
-        nonbondedforce.setParticleParameters(i, 0.0, sigma, 0.0)
+try:
+    CustomLJbyParmed
+except NameError:
+    for i in range(system.getNumParticles()):
+        [charge, sigma, epsilon] = nonbondedforce.getParticleParameters(i)
+        customnonbond.addParticle([epsilon, sigma, 0.0])
+        if i in alchemical_particles:
+            nonbondedforce.setParticleParameters(i, 0.0, sigma, 0.0)
+else:
+    # CustomLJbyParmed_exists = True
+    for i in range(system.getNumParticles()):
+        [epsilon, sigma] = CustomLJbyParmed.getParticleParameters(i)
+        customnonbond.addParticle([epsilon, sigma, 0.0])
+        if i in alchemical_particles:
+            CustomLJbyParmed.setParticleParameters(i, (0.0, sigma))
+            nonbondedforce.setParticleParameters(i, 0.0, sigma, 0.0)
 
 customnonbond.addInteractionGroup(alchemical_particles, chemical_particles)
 customnonbond.addInteractionGroup({index},{index+1})
@@ -106,7 +112,7 @@ nequlibrium = 20000  #run short (10–100 ps) simulations to equlibrate at each 
 #print(parmed.openmm.energy_decomposition_system(parm, system,nrg=kilojoules_per_mole))
 
 simulation.step(nequlibrium)
-nsteps =1000
+nsteps =100
 niterations = [125, 250]
 
 x1,y1 = np.polynomial.legendre.leggauss(10)
@@ -170,7 +176,5 @@ with open('nacl_out.pdb', 'w') as config:
     simulation.topology.setPeriodicBoxVectors(boxVec)
     PDBFile.writeFile(simulation.topology, simulation.context.getState(getPositions=True).getPositions(), config)
 
-#output.write("LJ + elec + free_energy %f\n" %lj+elec)
-#output.write("LJ + elec %f\n" %lj+elec)
 output.write("time: %f s" %(time.time()-start_t))
 output.close()
