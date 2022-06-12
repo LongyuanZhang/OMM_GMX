@@ -2,7 +2,7 @@
 OpenMM TI using Gromacs input
 
 ## How to use this example?
-First, create a conda environment from it: conda env create -f OMM_GMX.yml
+First, create a conda environment from OMM_GMX.yml: conda env create -f OMM_GMX.yml
 
 ghost.top: the topology file used in Gromacs thermodynamic integration.  
 solv_ions.gro: the coonfiguration in Gromacs thermodynamic integration, with the very last two particle Na+ and Cl- as the alchemical particles.  
