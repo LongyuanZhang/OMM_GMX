@@ -1,24 +1,20 @@
+import os
 import numpy as np
-import csv
-import networkx as nx
-import random
 from openmm.app import * 
 from openmm import * 
 from openmm.unit import *
-from sys import stdout
-from sys import argv
-from math import sqrt
 import parmed
 from parmed import gromacs
 import time 
 
+PREFIX = os.environ["CONDA_PREFIX"]
+gromacs.GROMACS_TOPDIR = PREFIX + "/share/gromacs/top"
+
 start_t = time.time()
-gromacs.GROMACS_TOPDIR = "/home/lzhang657/anaconda3/envs/CLIPS2/share/gromacs/top"
 output =  open('ti.txt', 'w')
 
 parm = parmed.load_file("ghost.top",xyz="solv_ions.gro")
 positions = parm.positions
-#print(type(parm))
 system = parm.createSystem(nonbondedMethod=PME, nonbondedCutoff=1*nanometers, constraints=HBonds, rigidWater=True, ewaldErrorTolerance=0.0005)
 
 forces = system.getForces()
@@ -79,7 +75,6 @@ else:
 
 customnonbond.addInteractionGroup(alchemical_particles, chemical_particles)
 customnonbond.addInteractionGroup({index},{index+1})
-#customnonbond.setUseLongRangeCorrection(True)
 customnonbond.setCutoffDistance(nonbondedforce.getCutoffDistance())
 customnonbond.setNonbondedMethod(2)
 for i in range(nonbondedforce.getNumExceptions()):
@@ -94,8 +89,7 @@ system.addForce(customnonbond)
 integrator = LangevinIntegrator(298.15*kelvin, 1.0/picoseconds,
     2.0*femtoseconds)
 
-# No Barostat bec. no solvent
-#system.addForce(MonteCarloBarostat(1*atmospheres, 298.15*kelvin, 25))
+system.addForce(MonteCarloBarostat(1*atmospheres, 298.15*kelvin, 25))
 
 platform = Platform.getPlatformByName('CPU')
 
@@ -105,7 +99,6 @@ simulation.context.setPositions(positions)
 def setParameters(LJScaling, chargeScaling):
     nonbondedforce.setParticleParameters(index,1.0*chargeScaling,0.0,0.0)
     nonbondedforce.setParticleParameters(index+1,-1.0*chargeScaling,0.0,0.0)
-    #simulation.context.setParameter('lambda', LJScaling)
     nonbondedforce.updateParametersInContext(simulation.context)
     for i in range(system.getNumParticles()):
         [epsilon, sigma, lambda0] = customnonbond.getParticleParameters(i)
@@ -116,11 +109,9 @@ setParameters(0.0, 0.0)
 simulation.context.setVelocitiesToTemperature(298.15*kelvin)
 simulation.reporters.append(app.DCDReporter('traj.dcd', 5000))
 
-nequlibrium = 40000  #run short (10–100 ps) simulations to equlibrate at each lambda state
-#nequlibrium = 10000  #run short (10–100 ps) simulations to equlibrate at each lambda state
-#print(parmed.openmm.energy_decomposition_system(parm, system,nrg=kilojoules_per_mole))
+nequlibrium = 50000  #run short (10–100 ps) simulations to equlibrate at each lambda state
 simulation.step(nequlibrium)
-nsteps =10
+nsteps = 1000
 niterations = [125, 250]
 
 x1,y1 = np.polynomial.legendre.leggauss(10)
@@ -171,7 +162,6 @@ for i in range(10):
     elec += derivatives[i+10]*w2[i]
 elec = elec/niterations[1]
 output.write("LJ %f elec %f total %f\n" %(lj, elec, lj+elec))
-#output.write("%f\n" %lj+elec)
             
 with open('nacl_out.pdb', 'w') as config:
     boxVec = simulation.context.getState(getPositions=True).getPeriodicBoxVectors()
